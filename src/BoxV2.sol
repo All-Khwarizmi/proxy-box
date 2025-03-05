@@ -18,7 +18,6 @@ contract BoxV2 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
-
     }
 
     // Stores a new value in the contract
@@ -33,7 +32,7 @@ contract BoxV2 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     function version() public pure returns (uint256) {
-        return 1;
+        return 2;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override {}
