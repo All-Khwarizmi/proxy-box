@@ -13,22 +13,18 @@ contract UpgradeBoxScript is Script {
 
         vm.startBroadcast();
         BoxV2 newBox = new BoxV2();
-
         vm.stopBroadcast();
 
         proxyAddress = upgradeBox(mostRecentlyDeployed, newBox);
     }
 
     function upgradeBox(address proxyAddress, BoxV2 newBox) public returns (address) {
-        console.log("Upgrading BoxV1 at address:", proxyAddress);
         BoxV1 proxy = BoxV1(proxyAddress);
-        console.log("Box Version", proxy.version());
-        vm.startBroadcast();
 
+        vm.startBroadcast();
         proxy.upgradeToAndCall(address(newBox), "");
         vm.stopBroadcast();
 
-        console.log("Upgraded BoxV1 at address:", address(proxy));
         return address(proxy);
     }
 }

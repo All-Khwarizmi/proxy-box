@@ -11,22 +11,28 @@ import {UpgradeBoxScript} from "../script/UpgradeBox.s.sol";
 contract IntegrationsTest is Test {
     BoxV1 boxV1;
     BoxV2 boxV2;
-    DeployBoxScript deployBox;
+    DeployBoxScript boxDeployer;
     UpgradeBoxScript upgradeBox;
     address proxy;
 
+    uint256 VALUE = 737;
+
     function setUp() public {
-        deployBox = new DeployBoxScript();
+        boxDeployer = new DeployBoxScript();
         upgradeBox = new UpgradeBoxScript();
     }
 
-    function testDeployV1() public {
-        boxV1 = BoxV1(deployBox.deployBox());
+    modifier deploy() {
+        proxy = boxDeployer.deployBox();
+        _;
+    }
+
+    function testDeployV1() public deploy {
+        boxV1 = BoxV1(proxy);
         assertEq(boxV1.version(), 1);
     }
 
-    function testBothBoxesHaveTheSameProxyAddress() public {
-        proxy = deployBox.deployBox();
+    function testBothBoxesHaveTheSameProxyAddress() public deploy {
         boxV1 = BoxV1(proxy);
 
         upgradeBox.upgradeBox(proxy, new BoxV2());
@@ -35,9 +41,7 @@ contract IntegrationsTest is Test {
         assertEq(address(boxV1), address(boxV2));
     }
 
-    function testUpgradeV1ToV2() public {
-        proxy = deployBox.deployBox();
-
+    function testUpgradeV1ToV2() public deploy {
         boxV1 = BoxV1(proxy);
         assertEq(boxV1.version(), 1);
 
@@ -45,5 +49,24 @@ contract IntegrationsTest is Test {
 
         boxV2 = BoxV2(proxy);
         assertEq(boxV2.version(), 2);
+    }
+
+    function testV1ShouldRevertWhenSetNumber() public deploy {
+        boxV2 = BoxV2(proxy);
+
+        vm.expectRevert();
+        boxV2.store(VALUE);
+    }
+
+    function testShouldBeAbleToSetNumberAfterUpgrade() public deploy {
+        upgradeBox.upgradeBox(proxy, new BoxV2());
+
+        boxV2 = BoxV2(proxy);
+
+        boxV2.store(VALUE);
+
+        uint256 value = boxV2.retrieve();
+
+        assertEq(value, VALUE);
     }
 }
